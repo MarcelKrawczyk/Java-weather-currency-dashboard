@@ -37,9 +37,9 @@ public class Service {
         COUNTRY_TO_CURRENCY.put("China", "CNY");
     }
 
-    public Service(String kraj) {
-        this.country = kraj;
-        this.currencyCode = COUNTRY_TO_CURRENCY.getOrDefault(kraj, "USD");
+    public Service(String country) {
+        this.country = country;
+        this.currencyCode = COUNTRY_TO_CURRENCY.getOrDefault(country, "USD");
     }
 
     public String getCurrencyCode() {
@@ -102,10 +102,10 @@ public class Service {
             return json.substring(start, end).trim();
         }
     }
-    public String getWeather(String miasto) {
+    public String getWeather(String city) {
         try {
             Map<String, String> params = new HashMap<>();
-            params.put("q", miasto + "," + country);
+            params.put("q", city + "," + country);
             params.put("appid", OPENWEATHER_API_KEY);
             params.put("units", "metric");
             params.put("lang", "en");
@@ -116,16 +116,16 @@ public class Service {
             return "{\"error\":\"" + e.getMessage() + "\"}";
         }
     }
-    public String getWeatherSummary(String miasto) {
-        String json = getWeather(miasto);
+    public String getWeatherSummary(String city) {
+        String json = getWeather(city);
         if (json.contains("\"error\"")) return "Could not fetch weather data.\n" + json;
 
-        String desc        = extractJson(json, "description");
-        String temp        = extractJson(json, "temp");
-        String feelsLike   = extractJson(json, "feels_like");
-        String humidity    = extractJson(json, "humidity");
-        String windSpeed   = extractJson(json, "speed");
-        String cityName    = extractJson(json, "name");
+        String desc = extractJson(json, "description");
+        String temp = extractJson(json, "temp");
+        String feelsLike = extractJson(json, "feels_like");
+        String humidity = extractJson(json, "humidity");
+        String windSpeed = extractJson(json, "speed");
+        String cityName = extractJson(json, "name");
 
         return String.format(
                 "City       : %s%n" +
@@ -133,7 +133,7 @@ public class Service {
                         "Temperature: %s °C (feels like %s °C)%n" +
                         "Humidity   : %s%%%n" +
                         "Wind speed : %s m/s",
-                cityName != null ? cityName : miasto,
+                cityName != null ? cityName : city,
                 desc      != null ? desc      : "N/A",
                 temp      != null ? temp      : "N/A",
                 feelsLike != null ? feelsLike : "N/A",
@@ -175,7 +175,6 @@ public class Service {
 
             if (baseRate == null || baseRate == 0 || targetRate == null) return null;
             if (currencyCode.equals("EUR")) baseRate = 1.0;
-
             return targetRate / baseRate;
 
         } catch (Exception e) {
@@ -186,10 +185,9 @@ public class Service {
     public Double getNBPRate() {
         if (currencyCode.equals("PLN")) return null;
 
-        for (String table : new String[]{"A", "B"}) {
+        for (String table : new String[]{"A", "B", "C"}) {
             try {
-                URI uri = new URI("https://api.nbp.pl/api/exchangerates/rates/"
-                        + table + "/" + currencyCode + "/?format=json");
+                URI uri = new URI("https://api.nbp.pl/api/exchangerates/rates/" + table + "/" + currencyCode + "/?format=json");
                 String json = getResponse(uri);
                 int midIdx = json.indexOf("\"mid\":");
                 if (midIdx < 0) continue;
